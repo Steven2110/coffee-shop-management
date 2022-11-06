@@ -96,13 +96,14 @@ public abstract class Employee: Person {
     }
 
     public abstract bool resign();
-    public abstract Customer registerCustomer(Person person);
+    public abstract void registerCustomer(Person person);
 }
 
 class Manager: Employee {
+    CoffeeShop placeWork;
 
-    public Manager(double salary, string name, string email, string phone): base(salary, name, email, phone) {
-
+    public Manager(double salary, string name, string email, string phone, CoffeeShop placeWork): base(salary, name, email, phone) {
+        this.placeWork = placeWork;
     }
 
     public bool trainBarista(Barista newBarista) {
@@ -123,16 +124,29 @@ class Manager: Employee {
         }
         return true;
     }
-    public override Customer registerCustomer(Person person) {
-        Customer newCustomer = new Customer(this);
+    public override void registerCustomer(Person person) {
+        Customer newCustomer = new Customer(person.Name, person.Email, person.Phone, placeWork);
+        // coffeeShop.registerNewCustomer(newCustomer);
+        Console.WriteLine("Sucessfully added new customer");
     }
 
+    public bool makeMenu() {
+        placeWork.MENU = new Menu();
+        EspressoBased espresso = new EspressoBased("Doppio", 50, 12, DrinkType.Hot, 30);
+        FilterCoffee filterCoffee = new FilterCoffee("V60", 330, 33, DrinkType.Hot, 30);
+        MilkCoffee latte = new MilkCoffee("Latte", 300, 30, DrinkType.Hot, 15);
+        placeWork.MENU.addEspressoBased(espresso);
+        placeWork.MENU.addFilterCoffee(filterCoffee);
+        placeWork.MENU.addMilkBased(latte);
+        return true;
+    }
 }
 
 class Cashier: Employee {
+    CoffeeShop placeWork;
     List<Order> todaysOrder = new List<Order>();
-    public Cashier(double salary, string name, string email, string phone): base(salary, name, email, phone) {
-
+    public Cashier(double salary, string name, string email, string phone, CoffeeShop placeWork): base(salary, name, email, phone) {
+        this.placeWork = placeWork;
     }
 
     public Order createOrder(Customer customer, List<Beverage> beverages) {
@@ -154,11 +168,17 @@ class Cashier: Employee {
         }
         return true;
     }
+    public override void registerCustomer(Person person) {
+        Customer newCustomer = new Customer(person.Name, person.Email, person.Phone, placeWork);
+        placeWork.registerNewCustomer(newCustomer);
+        Console.WriteLine("Succesfully added new customer!");
+    }
 }
 
 class Barista: Employee {
-    public Barista(double salary, string name, string email, string phone): base(salary, name, email, phone) {
-
+    CoffeeShop placeWork;
+    public Barista(double salary, string name, string email, string phone, CoffeeShop placeWork): base(salary, name, email, phone) {
+        this.placeWork = placeWork;
     }
     public bool makeBeverage(Order order) {
         foreach(Beverage beverage in order.Beverages) {
@@ -173,6 +193,10 @@ class Barista: Employee {
         }
         return true;
     }
+    public override void registerCustomer(Person person) {
+        Customer newCustomer = new Customer(person.Name, person.Email, person.Phone, placeWork);
+        // coffeeShop.registerNewCustomer(newCustomer);
+    }
 }
 
 class Customer: Person {
@@ -183,24 +207,27 @@ class Customer: Person {
     MembershipLevel? membershipLevel = null;
 
     int membershipCoffeePts;
+    CoffeeShop myCoffeeShop;
 
 #nullable enable
     string? membershipDateCreated = null;
 
     // List<Order> orders;
 
-    public Customer(string name, string email, string phone): base(name, email, phone) {
+    public Customer(string name, string email, string phone, CoffeeShop coffeeShop): base(name, email, phone) {
         customerID = Guid.NewGuid();
         hasMembership = false;
         membershipCoffeePts = 0;
+        myCoffeeShop = coffeeShop;
     }
 
     public bool buyMembership() {
         return false;
     }
 
-    public bool makeOrder(Menu menu, Cashier cashier) {
+    public bool makeOrder(Cashier cashier) {
         Random random = new Random();
+        Menu menu = myCoffeeShop.MENU;
 
         List<Beverage> beveragesThatCustomerWant = new List<Beverage>();
         int numberOfBeverage = random.Next(10);
@@ -218,12 +245,8 @@ class Customer: Person {
             method = PaymentMethod.Cash;
         }
         
-        if (thisOrder.CHECK.pay(method)) {
-            return true;
-        }
-        else {
-            return false;
-        }
+        thisOrder.CHECK.pay(method);
+        return true;
     }
 
     public void getInfo() {

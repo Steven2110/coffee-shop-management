@@ -38,28 +38,14 @@ class CreditCard: Payment {
     }
 
     public override bool initiateTransaction() {
-        if (cardNumber.ToString().Count() == 16) {
-            ID = Guid.NewGuid();
-            DatePaid = DateTime.Now.ToString("dd.MM.yy");
-            return true;
-        }
-        return false;
+        return true;
     }
 }
 
 class Cash: Payment {
-    double cashTendered;
 
     public override bool initiateTransaction()
     {
-        double amountNeededToBePaid = CHECK.Amount;
-        Random rand = new Random();
-        cashTendered = Math.Floor(amountNeededToBePaid / 10) + rand.Next(2, 10) * 5;
-        if (cashTendered < amountNeededToBePaid) {
-            return false;
-        }
-        ID = Guid.NewGuid();
-        DatePaid = DateTime.Now.ToString("dd.MM.yy");
         return true;
     }
 }
